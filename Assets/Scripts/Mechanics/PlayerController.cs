@@ -50,7 +50,7 @@ namespace Platformer.Mechanics
             spriteRenderer = GetComponent<SpriteRenderer>();
             animator = GetComponent<Animator>();
         }
-
+#if UNITY_STANDALONE
         protected override void Update()
         {
             if (controlEnabled)
@@ -71,6 +71,58 @@ namespace Platformer.Mechanics
             UpdateJumpState();
             base.Update();
         }
+#endif
+
+#if UNITY_IOS || UNITY_ANDROID
+
+        public void JumpDown()
+        {
+            Debug.Log("jump down");
+        }
+
+        public void JumpUp()
+        {
+            Debug.Log("jump up");
+        }
+
+        protected override void Update()
+        {
+            float touchMove = 0f;
+
+            if (Input.touchCount > 0)
+            {
+                Touch touch = Input.GetTouch(0);
+                if(touch.position.x > Screen.width / 2)
+                {
+                    touchMove = 1f;
+                }
+                else if(touch.position.x < Screen.width / 2)
+                {
+                    touchMove = -1f;
+                }
+            }
+
+
+            if (controlEnabled)
+            {
+                move.x = touchMove;
+                if (jumpState == JumpState.Grounded && Input.GetButtonDown("Jump"))
+                    jumpState = JumpState.PrepareToJump;
+                else if (Input.GetButtonUp("Jump"))
+                {
+                    stopJump = true;
+                    Schedule<PlayerStopJump>().player = this;
+                }
+            }
+            else
+            {
+                move.x = 0;
+            }
+            UpdateJumpState();
+            base.Update();
+        }
+
+#endif
 
         void UpdateJumpState()
         {
