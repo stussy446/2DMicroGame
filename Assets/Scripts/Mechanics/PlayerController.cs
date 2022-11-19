@@ -5,6 +5,7 @@ using Platformer.Gameplay;
 using static Platformer.Core.Simulation;
 using Platformer.Model;
 using Platformer.Core;
+using UnityEngine.EventSystems;
 
 namespace Platformer.Mechanics
 {
@@ -29,8 +30,10 @@ namespace Platformer.Mechanics
 
         public JumpState jumpState = JumpState.Grounded;
         private bool stopJump;
-        /*internal new*/ public Collider2D collider2d;
-        /*internal new*/ public AudioSource audioSource;
+        /*internal new*/
+        public Collider2D collider2d;
+        /*internal new*/
+        public AudioSource audioSource;
         public Health health;
         public bool controlEnabled = true;
 
@@ -50,7 +53,9 @@ namespace Platformer.Mechanics
             spriteRenderer = GetComponent<SpriteRenderer>();
             animator = GetComponent<Animator>();
         }
+
 #if UNITY_STANDALONE
+
         protected override void Update()
         {
             if (controlEnabled)
@@ -71,44 +76,60 @@ namespace Platformer.Mechanics
             UpdateJumpState();
             base.Update();
         }
+
 #endif
 
-#if UNITY_IOS || UNITY_ANDROID
+#if UNITY_ANDROID || UNITY_IOS
+
+        bool jumpDown = false;
+        bool jumpUp = false;
 
         public void JumpDown()
         {
-            Debug.Log("jump down");
+            print("down!");
+            jumpDown = true;
+
         }
 
         public void JumpUp()
         {
-            Debug.Log("jump up");
+            print("up!");
+            jumpUp = true;
+
         }
 
         protected override void Update()
         {
+
             float touchMove = 0f;
+
 
             if (Input.touchCount > 0)
             {
                 Touch touch = Input.GetTouch(0);
-                if(touch.position.x > Screen.width / 2)
+
+                if (touch.position.x > Screen.width / 2)
                 {
+                    Debug.Log("right touch!");
                     touchMove = 1f;
                 }
-                else if(touch.position.x < Screen.width / 2)
+
+                else if (touch.position.x < Screen.width / 2)
                 {
+                    Debug.Log("left touch!");
                     touchMove = -1f;
                 }
-            }
 
+            }
 
             if (controlEnabled)
             {
                 move.x = touchMove;
-                if (jumpState == JumpState.Grounded && Input.GetButtonDown("Jump"))
+
+
+                if (jumpState == JumpState.Grounded && jumpDown == true)
                     jumpState = JumpState.PrepareToJump;
-                else if (Input.GetButtonUp("Jump"))
+                else if (jumpUp == true)
                 {
                     stopJump = true;
                     Schedule<PlayerStopJump>().player = this;
@@ -120,6 +141,9 @@ namespace Platformer.Mechanics
             }
             UpdateJumpState();
             base.Update();
+
+            jumpDown = false;
+            jumpUp = false;
         }
 
 #endif
